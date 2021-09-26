@@ -1,6 +1,6 @@
 {
     "name": "Wmbusmeters (W-MBus to MQTT)",
-    "version": "0.0.01",
+    "version": "0.0.02",
     "slug": "wmbusmeters",
     "description": "wmbusmeters special edition for brand new AP-WMBUS-16-2",
     "arch": ["armv7", "aarch64", "amd64"],
