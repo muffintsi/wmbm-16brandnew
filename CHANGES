@@ -1,0 +1,671 @@
+
+Added support for the Apator uniSMART gas meter.
+
+You can now decode a telegram just by supplying hex on the command line:
+wmbusmeters --format=json <hex_string>  MyMeter auto 12345678 NOKEY
+or just
+wmbusmeters <hex_string>
+
+Added --listunits to list all quantities and the units for each quantity
+that wmbusmeteres knows about.
+
+Tomasz Gramza added manual offset setting to the apator162 meter driver.
+You can now specify for example: apator162(offset=29) to use the 4 bytes
+at offset 29 in the telegram as the water consumption. Other offsets
+known to work for apators are 9,12,20,23. This is useful as a final
+resort to get your apator162 readout working. You have to test different
+offsets until it works. Thanks Tomasz!
+
+Version 1.4.0: 2021-08-09
+
+Fixed a race that sometimes caused wmbusmeters to crash when resetting the dongles,
+which happens by default every 23 hours.
+
+Fixed two crashes that could be triggered with broken telegrams. Crashes found by fuzzing.
+
+Improved detection of the amb8465 dongle. The detection code could be confused
+if the dongle was receiving a lot of valid telegrams at the same time.
+
+Added telegram content sent by Axioma W1 meter to driver q400,
+since Axioma  identifies itself as a q400 meter.
+
+You can now add constant fields using --field_extra_info=floor54 and
+--selectfields=....,extra_info,.... to print constant values into
+the fields format. --field_xxx=yyy is the new name for --json_xxx=yyy.
+The old --json_xxx=yyy continues to work for backwards compatibility.
+
+The timestamp field/key is the time registered by wmbusmeters
+when the telegram was received. (The telegram itself sometimes
+contain another timestamp when the telegram was sent.)
+
+This timestamp field is encoded using the local time when used
+in hr/fields (ie "2021-01-01 12:15.00") but UTC time within json
+(ie "2021-01-01T10:15.00Z").
+
+This will stay the same. However now you can explicitly select
+the timestamp format for the selected fields. Select timestamp_ut
+to print the timestamp as a unix timestamp (ie seconds since 1970-01-01).
+Select timestamp_utc for the timestamp in UTC and timestamp_lt for local time.
+
+Daniel Glaser added support for the Aventies water meter! Thanks Daniel!
+
+Mblnk added support for Qundis QWater5.5. Thanks Mblnk!
+
+Support added for the water meter Diehl IZAR RC I G4.
+
+Version 1.3.0: 2021-04-09
+
+You can now use "auto" as a meter driver.
+Wmbusmeters will then pick the right driver when
+the first telegram arrives. A warning will be printed
+in the logs if no driver could be found.
+
+If you do not specify a type= in the meter config file,
+then it will default to auto.
+
+Added --logtimestamps=important/never/always to prefix
+a logged line in the log file or stderr output with a timestamp.
+Important means timestamp warnings and device changes.
+Daemon mode defaults to important.
+
+Added support for firmware version 0x14 for im871a dongle.
+(The old version is 0x13 and you can see the firmware version if
+you run with --verbose.) The new version of the im871a firmware
+supports listening to c1 and t1 at the same time.
+
+Version 1.2.0: 2021-03-07
+
+IMPORTANT CHANGES THAT MIGHT AFFECT YOU!vvvvvvvvvvvvvvvvvvvvvv
+
+wmbusmeters now expects the latest version of rtl_wmbus with -s support.
+The default behaviour is to use -s to listen to S1,T1 and C1 at the same time.
+Check the README for more info.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Rattinca helped add support for the EI Electronics smoke detector. Thanks Rattinca!
+
+Ignore duplicates is now enabled by default. Turn it off with --ignoreduplicates=false
+
+Fixed problem with state maintaining meter drivers and wildcard ids.
+A HCA driver was producing telegrams with values that jumped up and down.
+This was due to the fact that the meter state in the driver was updated
+through multiple different telegrams (this is how the meter works).
+Clearly a single state object could not properly maintain the state for all
+possible meters matching the wildcard, the state became a random mix
+of whatever telegrams arrived.
+
+The fix now, is that a meter C++ object for a uniqe id (not wildcard)
+is created only when the first telegram arrives that matches the wildcard.
+Thus each meter will have its own C++ object, in which the correct state
+is maintained.
+
+Version 1.1.0: 2021-02-20
+
+Vincent Privat added code for properly decoding several types of izar meter.
+He also added full support for the heat meter sharky 775!
+Thanks Vincent!
+
+IMPORTANT CHANGES THAT MIGHT AFFECT YOU!vvvvvvvvvvvvvvvvvvvvvv
+
+Important! Since the new code decodes the correct meter id from the izar
+telegrams, therefore your current izar meter setup will break! You have
+to update your meter files with the new id. The id is still not
+the id that is printed on the meter. However, the numbers that are
+printed on the meter are now available in the json eg:
+"prefix":"H19CA","serial_number":"026273" which makes it easier
+for you to find the proper meter id to listen to.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added support for telegrams with different dll id vs tpl id.
+
+Such telegrams can be generated when a standalone radio converter
+(with its own id) is attached to an mbus meter (with its own id).
+Ie there are two distinct ids. The id specified to wmbusmeters will
+be now tried both against the dll id and the tpl id, previously
+it was only tried against the dll id.
+
+IMPORTANT CHANGES THAT MIGHT AFFECT YOU!vvvvvvvvvvvvvvvvvvvvvv
+
+Important! The meter id reported in the json "id":"........" will
+now always be the tpl id, if such an id was part of the telegram.
+For most meters this is not a problem, but if you have a standalone
+radio converter, or a meter with a wmbus plugin (radio converter meter side),
+then you might get a different id.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added support for the Apator Elf heat meter.
+
+Version 1.0.5: 2021-01-30
+
+Xael South added support for the Gran-System-S electricity meters!
+Thanks Xael!
+
+Added support for evo868 water meter addon module.
+Added support for whe542 heat cost allocator.
+
+Marc Kolly improved the Waterstar meter and added better error codes
+and another type/version detection combo! Thanks Marc!
+
+Janus Bo Andersen fixed the omnipower driver! Thanks Janus!
+
+Version 1.0.4: 2020-12-05
+
+Nikodem added support for Multical803! Thanks Nikodem!
+
+Added a warning to be printed if an rtl_sdr dongle is found when using auto
+and either rtl_sdr or rtl_wmbus cannot be found in the path at startup.
+
+Cinemarene added support for the Techem MK Radio 4 water meter.
+Thanks Cinemarene!
+
+Mira added support for Elster V200H water meter and the Elster Merlin 868 addon.
+Thanks Mira!
+
+Version 1.0.3: 2020-11-11
+
+Add missing files and update man page for --nodeviceexit
+
+Version 1.0.2: 2020-11-11
+
+Fixed bug that prevented rtlwmbus[1234] from working.
+Fixed a race that in one out of 100 runs, ignored a telegram
+on stdin and exited without decoding it.
+
+Wmbusmeters now warns if you have specified /dev/ttyUSB0:im871a:c1
+but there is no /dev/ttyUSB0 or if there is an amb8465 on /dev/ttyUSB0.
+
+Added --nodeviceexit
+
+This option will force wmbusmeters to exit if no wmbus device is found.
+For example if you specify /dev/ttyUSB0:im871a:c1 and you want
+wmbusmeters to fail if there is no im871a on ttyUSB0.
+
+Added --donotprobe=/dev/ttyUSB0
+
+(Also made sure that specifying only rtlwmbus/rtl433 will not probe
+serial ttys.  Specifying fully specified devices like
+/dev/ttyUSB0:im871a:c1 will also not probe the other serial ttys.
+Only specifying auto or a generic device type im871a that requires a
+serial tty, will probe the serial devices, exluding donotprobe ones.)
+
+Added support for the sontex868 heat cost allocator.
+
+Jacek27 added support for the Ultrimis water meter.
+Thanks Jacek27!
+
+psxde added support for the Sensostar 2 heat meter.
+Thanks psxde!
+
+Version 1.0.1: 2020-10-26
+
+Fix bug that prevented /dev/ttyUSB0:im871a:c1 to work.
+Fix bug in install.sh that did not add wmbusmeters to the plugdev group.
+
+Add --ignoreduplicates (ignoreduplicates=true) to ignore
+any duplicates. It remembers a history of 10 telegrams.
+This is useful when you have multiple dongles for covering
+a larger area of reception, but sometimes telegrams arrive
+at multiple dongles at the same time.
+
+Add proper support for FlowIQ2200 water meter.
+Decode two vendor values in multical603 as energy forward and returned.
+Accept t1 and c1 as linkmodes for multical21 meters.
+
+Version 1.0.0: 2020-10-25
+
+IMPORTANT CHANGES THAT MIGHT AFFECT YOU!
+
+** BREAKING No udev rules
+
+Wmbusmeters new default behaviour is to never exit if no wmbus
+device is found. It stays running all the time even if no
+wmbus device is detected. As soon as a device is inserted
+it will detect/configure and start using the device.
+
+(When reading stdin and files, then wmbusmeters will of course exit
+as soon as there is no more data or stdin is closed.)
+
+This means that the udev rules no longer are needed and must be
+removed. This will be done automatically by the install script.
+
+** BREAKING The background rtlwmbus/rtl433 command must be wrapped in CMD(...)
+
+If you used your own command xxx to start rtlsdr+rtlwmbus then that command
+was previously supplied like this rtlwmbus:xxx
+You must now type rtlwmbus:CMD(xxx)
+
+** There is a possibility to identify some dongles with their id.
+
+The im871a/amb8465/rtlsdr dongles have an id. This id is printed when
+wmbusmeters starts using the dongle. You can later use the same id to
+configure different dongles for different frequencies and link modes.
+
+You could for example have one rtlsdr dongle with an antenna tuned for 434 MHz
+and use set the id of that dongle to dongleALFA (rtl_eeprom -s dongleALFA)
+likewise for 868.95 MHz. Then you can start your two dongles at the same time:
+
+wmbusmeters rtlwmbus[dongleALFA]:434M rtlmbus[dongleBETA]:868M
+
+The full specification of a wmbus device is this:
+
+tty/file/stdin : type [ id ] : bps : fq : linkmodes : command
+
+Not all values are relevant for all dongles though.
+
+** Use stderr for logging, stdout for data.
+
+wmbusmeters now uses STDERR as default for info/verbose/debug/trace output.
+This will not affect you if you run wmbusmeters as a daemon,
+but if you start wmbusmeters yourself you should check where stderr is going.
+To use the old style add --usestdoutforlogging.
+
+** New features
+
+To list the shell envs for a meter do --listenvs=multical21
+To list the fields avilable for a meter do --listfields=multical21
+To list all meters do --listmeters
+To search for a meter do --listmeters=water or --listmeters=multi
+
+The wmbus device used to received the telegram and the rssi level
+is part of the json, eg: "device":"rtlwmbus[1234]","rssi_dbm":-47
+
+Version 0.9.36: 2020-09-08
+
+Added support for detection of the proper driver
+based on the manufacturer, media and version fields in the telegram.
+This driver is printed when listening without specifying any meters.
+The driver will be reported as unknown! for meters not yet supported by wmbusmeters.
+
+Avandorp added support for the AquaMetro / Integra Topas Es Kr water meter.
+Thanks Avandorp!
+
+IzeCube added the Techem Compact V heatmeter!
+Thanks IzeCube! Though we still need an example telegram for
+testing this meter to prevent regressions. So it is currently
+not as well supported as the other meters.
+
+Version 0.9.35: 2020-08-23
+
+Added support for alarms (shell command triggered)
+and resetting of dongle when no telegrams have been received
+for a preset time, or if there are communication errors
+with the dongle.
+
+Added support for the Waterstar M meter.
+
+Bug fix for long term problem where wmbusmeters did not properly
+shut down background rtl_sdr|rtl_wmbus pipeline.
+
+Eric added support for the Multical 403. Thanks Eric!
+
+Bibo made snapcraft fixes. The snap now builds properly! Thanks Bibo!
+
+Version 0.9.34: 2020-07-09
+
+Wmbusmeters should now properly handle
+partially encrypted telegrams in mode 5 and 7.
+
+The docker image now builds rtl_wmbus from the weetmuts
+fork.
+
+Bibo supplied code to auto-update the Docker hub README.
+
+Version 0.9.33: 2020-07-01
+
+Bibo made docker fixes. Now rtl_sdr, rtl_wmbus
+and rtl_433 are part of the docker image. Thanks Bibo!
+
+Version 0.9.32: 2020-06-30
+
+Added support for the Lansen Smoke detector, Door/Window sensor
+and Pulse counter.
+
+The tool wmbusmeters-admin can now factory reset your amb8465 dongle.
+
+Version 0.9.31: 2020-05-09
+
+You can add comments in the conf and meter files.
+A comment is a line that starts with #.
+
+When using --format=fields you can now supply
+--selectfields=id,total_m3 to print only the selected fields.
+Run with --listfields to see all the avilable fields from a meter.
+
+Improvements in the izar driver. Thanks Erwan!
+
+Bug fixes in the amd8465 driver. Thanks Henry N.!
+
+Version 0.9.30: 2020-04-22
+
+Erwan added support for building on FreeBSD. Thanks Erwan!
+
+Version 0.9.29: 2020-04-03
+
+Re-add the wmbusmeters.service file so
+that the daemon can be easily started without
+udev rules. Check the README.
+
+Version 0.9.28: 2020-03-08
+
+Improved docker work, thanks Bibo!
+Better shell scripts for installing and daemon mode,
+in preparation for rpm packaging. Thanks Damian!
+
+Version 0.9.27: 2020-02-26
+
+Added support for the apator08 meter.
+Fixed important bug that caused rtl_sdr to hang
+when daemon was stopped/restarted.
+Added support for both T1 and S1 modes for the CUL-dongle.
+Added helpful messages when startup of daemon using rtl_wmbus
+fails because /usr/bin/rtl_sdr or /usr/bin/rtl_wmbus are missing.
+
+Version 0.9.26: 2020-02-07
+
+Cinemarene added support for the Techem
+FHKV Data III heat cost allocator. Thanks cinemarene!
+
+Version 0.9.25: 2020-02-07
+
+Fix bug i esyswm and ebzwmbe that printed zero values
+for phase 2 and 3.
+
+Version 0.9.24: 2020-02-06
+
+Added the electricity meter eBZ wMB-E01 (ebzwmbe)
+Fixed bugs with detecting the wmbus dongles.
+Fixed bug in im871a driver that could
+get out of sync and never receive any more telegrams.
+
+Version 0.9.23: 2020-02-02
+
+Added the electricity meters:
+ESysWM-20 (esyswm) from EasyMeter
+eHZ Generation P (ehzp) from EMH Metering
+
+Added the water meter:
+Q400 (q400) from Axis Industries.
+
+Fixed a bug in the auto-start from udev that
+prevented rtlsdr/rtlwmbus to work properly.
+
+Version 0.9.22: 2020-01-19
+
+Bibo added docker support. Thanks Bibo!
+Checkout https://hub.docker.com/repository/docker/weetmuts/wmbusmeters
+
+Version 0.9.21: 2020-01-19
+
+Michal Bursa helped improve detection of a failing USB device
+and added support for automatically starting multiple wmbusmeters
+daemons if several dongles are inserted at the same time.
+Thanks Michal!
+
+Note! The wmbusmeters.service file is replaced with wmbusmeters@.service
+and the contents of the udev file is changed. The install script
+will properly install the new files and copy the old ones to ~/old.xxxx.backup files,
+and tell the user how to reload the systemd and udev daemons.
+
+Version 0.9.20: 2019-12-11
+
+Added support for meterfilestimestamp
+to get the effect of log rotation of the meter files.
+
+Version 0.9.19: 2019-11-26
+
+Chester4444 added support for the nanoCUL usb stick. Thanks chester4444!
+Michal added a utility program (kem-import.py) to import KEM files. Thanks Michal!
+Added support for the Diehl HYDRUS watermeter.
+Added proper support for Multical302.
+
+Version 0.9.18: 2019-11-10
+
+Jacek added support for the Sappel/IZAR 868 meter. Thanks Jacek!
+
+Version 0.9.17: 2019-11-03
+
+Thanks to afl-fuzz I found and added
+some (in retrospect pretty obvious)
+missing checks to deal with
+corrupted telegrams that crashed
+wmbusmeters.
+
+Now afl-fuzz does not trigger any crash
+after running for a couple of minutes.
+Lets fuzz more....
+
+Version 0.9.16: 2019-11-03
+
+Significant rewrite of serial.cc.
+WMBusmeters can now specify stdin as <device>
+and continuously read wmbus frames from stdin.
+Either raw, or rtlwmbus formatted if stdin:rtlwmbus
+is supplied as the <device>. Check the README for
+more additions.
+
+Version 0.9.15: 2019-10-20
+
+Added Bmeter (rfmamb) and Lansen room sensors (lansenth).
+Added support for the rfmrx2 dongle.
+Added rawtty (eg /dev/ttyUSB0:38400) support for dongles
+that only transmit raw telegrams on the serial port.
+Added the ability to add static json data tailored for the meter.
+
+Version 0.9.14: 2019-09-16
+
+Added negative match rule for ids. You can now write:
+id=78*,!7812345*,!78222222
+which will match any meter whose id begins with 78
+but not match any meter whose id begins with 7812345,
+nor the meter with the exact id 78222222.
+
+The order of the match rules does not matter.
+
+Version 0.9.13: 2019-08-14
+
+Fix bug that prevented rtl_wmbus to run inside daemon.
+
+Version 0.9.12: 2019-08-12
+
+Added experimental detection for apator162 where the total water consumption
+is located within the proprietary data.
+
+Version 0.9.11: 2019-06-20
+
+Added --meterfilesnaming=(name|id|name-id)
+to choose the file name written meter file.
+
+Naming using id or name-id is necessary when a meter
+specification listens to many different meters using id
+wildcards.
+
+Version 0.9.10: 2019-06-13
+
+Update logrotate to trigger HUP when rotating log files.
+This will re-initialize the serial connection to the usb dongle
+and reload the config files as well.
+
+Added reload command to systemctl.
+
+Version 0.9.9: 2019-06-11
+
+Added support for the signal HUP to trigger wmbusmeters(d)
+to reload config files.
+
+Added significantly better tracking of listening modes (C1,T1,S1 etc)
+and notify the user if the wmbusmeters configuration would not hear
+certain meters specified.
+
+The apator162 meter can send either on c1 or t1. Thus if you have
+an imst871a dongle that can only listen on one of c1/t1, then
+you have to specify which link mode you expect the meter to use.
+You do that by suffixing the meter type with the link mode, like
+this: `apator162:c1`
+
+If you do not do this, then wmbusmeters will assume that it must
+listen to both c1 and t1 at the same time. Which might
+be fine for amd8465 and rtlwmbus dongles, but not for imst871a.
+
+Version 0.9.8: 2019-05-22
+
+Added support for the EurisII heat cost allocator from Innotas.
+
+Version 0.9.7: 2019-05-04
+
+FeatureExpert added support for the Vario 451 heat meter. Thanks FeatureExpert!
+
+New feature: --addconversions=GJ,L
+
+This feature required a major rewrite of how meters print their data.
+When the new option --addconversion=<unit> is used, then
+any meter that outputs a compatible unit (like kWh) will have
+the additional unit (like GJ) also added to to the json.
+
+So if there is a total_energy_consumption_kwh in the json,
+there will now also be a total_energy_consumption_gj
+
+For the human readable output and the fields output, the kWh is replaced with GJ.
+
+ATTENTION! change in json keys!
+
+Some untyped json field names, like "flow_temperature":10 had to
+change name to "flow_temperature_c":0 (so that if --addconversions=F
+is used, then "flow_temperature_f":32 will be added.)
+
+Version 0.9.6: 2019-04-27
+
+Added support for the MK Radio 3 water meter. Thanks FeatureExpert!
+
+Version 0.9.5: 2019-04-26
+
+Improved install/uninstall scripts. Thanks Bibo!
+
+Fixed wrong default sample frequency for rtl_wmbus. Thanks inc90!
+
+Version 0.9.4: 2019-04-03
+
+The device auto can now detect an rtlsdr dongle and start
+rtl_sdr|rtl_wmbus properly. It can only detecht the rtlsdr
+dongle if the new udev rule has been installed, which will
+create the symlink /dev/rtlsdr when the dongle is inserted.
+
+Added the meter vendor Echelon to the generic amiplus meter type.
+(The Echelon meter seems to be a standard electricity meter with a
+wmbus addon sourced from Develco.)
+
+Version 0.9.3: 2019-03-20
+
+Added initial support for the generic Tauron Amiplus electricity meter type (amiplus).
+This is actually a generic meter type, that will match the meter vendors
+that provide meters under the Amiplus brand to Taurn. The first vendor to
+be supported is from Apator.
+
+Added support for the at-wmbus-16-2 snap on meter (apator162).
+Unfortunately it uses a vendor specific protocol,
+that is merely wrapped inside a wmbus telegram. Lets hope
+the offset to the consumption is stable between
+meters of this type.
+
+Verison 0.9.2: 2019-03-12
+
+Add max_flow to the iperl meter. This is based
+on a guess that the flow value is actually the max
+flow.
+
+Note! Since max flow was added to iperl, there is an extra
+column in the human output and --format=fields output.
+There is also "max_flow_m3h"="123" in the json output, but that does not
+affect existing code depending on json.
+
+Verison 0.9.1: 2019-03-05
+
+Added support for listening to multiple meters
+with the same key (or no key). Simple use '*'
+as meter id, or make a comma separated list.
+
+Added experimental support for listening to
+--n1a to --n1f and an imst dongle. Might not work.
+
+Version 0.9.0: 2019-02-26
+
+Reading the meter settings from config files
+in /etc is now supported.
+Running wmbusmeters as daemon is now supported.
+Using rtl_wmbus to receive wmbus messages from
+rtl_sdr is work in progress.
+Updated README
+Updated some command line options robot is now format.
+Listening to qcaloric now seems to work.
+Added support for MacOSX.
+
+Version 0.8.4: 2019-02-23
+
+Add config files support and daemon mode.
+
+Version 0.8.3: 2019-02-17
+
+Add experimental support for qcaloric.
+
+Version 0.8.2: 2019-01-27
+
+Properly supports short C1 frames after it has received a long frame.
+(Ie the format signature hash is properly calculated and used.)
+Now properly extracts temperature from short frames!
+Added support for Multical21 meters with max flow configuration.
+
+Note! Since max flow was added to multical21, there is an extra
+column in the human output and --format=fields output.
+There is also "max_flow_m3h"="123" in the json output, but that does not
+affect existing code depending on json.
+
+Version 0.8.1: 2019-01-04
+
+Fixed memory leak in shell invocation.
+Improved dvparser to properly handle the supercom587 telegrams.
+(It still does not extract all the data, but the data is properly parsed and chunked.)
+Added address sanitizer to debug build.
+Added static analysis check.sh.
+
+Version 0.8: 2018-11-29
+
+Multical21 now reports flow temperature and external temperature.
+
+Version 0.7: 2018-11-23
+
+David Mallon contributed the iPerl water meter! Thanks David!
+
+Version 0.6: 2018-11-02
+
+Added --shell command to invoke for example: mosquitto to send an MQTT message
+or psql to insert received data into a database.
+
+Added proper T1 telegram support. First meter to use T1 is supercom587.
+A large part of the supercom587 message is not yet properly decoded.
+However the important part, the total consumption, is correct.
+
+Version 0.5:
+
+Added difvif parser to extract as much as possible automatically
+from the the telegram.
+
+Added initial support for Omnipower electricity meter.
+
+Version 0.4:
+
+Added initial support for heat energy meter Multical302.
+Restructured to source to more easily support multiple meters.
+
+ATTENTION! There is a difference in the command line interface.
+You must now proved the meter type. Thus for each meter you
+supply quadruplets instead of triplets.
+
+Version 0.3:
+
+Added support for wmbus USB receiver Amber AMB8465.
+
+Version 0.2:
+
+Initial working release supporting wmbus USB receiver IMST im871a and the meter Multical21.

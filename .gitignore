@@ -1,0 +1,11 @@
+build/
+build_debug
+build_arm/
+build_arm_debug/
+testaes/
+testoutput/
+tests_tmp/
+*~
+config.log
+autom4te.cache/
+fuzz_testcases/telegrams/

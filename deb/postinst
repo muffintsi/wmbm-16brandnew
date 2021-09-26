@@ -1,0 +1,6 @@
+#!/bin/sh
+
+ADD_WMBUSMETERS_USER
+
+# Start wmbusmeters service
+systemctl start wmbusmeters.service
