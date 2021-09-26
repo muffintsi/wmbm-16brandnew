@@ -8,7 +8,7 @@ ADD https://api.github.com/repos/weetmuts/wmbusmeters/git/refs/heads/master vers
 RUN git clone https://github.com/muffintsi/wmbm-16brandnew.git && \
     git clone https://github.com/weetmuts/rtl-wmbus.git && \
     git clone https://github.com/merbanan/rtl_433.git
-WORKDIR /wmbusmeters
+WORKDIR /wmbm-16brandnew
 RUN make
 WORKDIR /rtl-wmbus
 RUN make release && chmod 755 build/rtl_wmbus
@@ -19,7 +19,7 @@ FROM $BUILD_FROM AS scratch
 ENV QEMU_EXECVE=1
 RUN apk add --no-cache mosquitto-clients libstdc++ curl libusb ncurses rtl-sdr
 WORKDIR /wmbusmeters
-COPY --from=build /wmbusmeters/build/wmbusmeters /wmbusmeters/wmbusmeters
+COPY --from=build /wmbm-16brandnew/build/wmbusmeters /wmbusmeters/wmbusmeters
 COPY --from=build /rtl-wmbus/build/rtl_wmbus /usr/bin/rtl_wmbus
 COPY --from=build /rtl_433/build/src/rtl_433 /usr/bin/rtl_433
 
